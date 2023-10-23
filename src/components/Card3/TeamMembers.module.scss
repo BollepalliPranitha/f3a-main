@@ -1,0 +1,95 @@
+/* TeamMembers.module.scss */
+
+.team-members-container {
+  overflow-x: auto; /* Add horizontal scrolling if needed */
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+
+.team-members-heading {
+  margin-bottom: 20px;
+  font-size: 32px;
+  text-align: center;
+}
+
+.member-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: #f2f2f2;
+  font-weight: bold;
+}
+
+td {
+  vertical-align: middle;
+  background: #ffffff;
+}
+
+td:first-child {
+  /* This targets the first td, which contains the team members' names */
+  text-align: left; /* Set text alignment to left */
+}
+
+tr {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.back-button {
+  display: inline-block;
+  margin: 20px 0 10px 20px; /* Adjust as needed */
+  padding: 10px 20px;
+  border-radius: 4px;
+  background-color: #007bff; /* Add your desired background color */
+  color: #fff; /* Text color */
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #0056b3; /* Change color on hover */
+}
+
+/* Styles for Save button */
+.save-button {
+  display: inline-block;
+  margin: 20px 0 10px 20px; /* Adjust as needed */
+  padding: 10px 20px;
+  border-radius: 4px;
+  background-color: #007bff; /* Add your desired background color */
+  color: #fff; /* Text color */
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #0056b3; /* Change color on hover */
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* You can add more specific styling here as needed */

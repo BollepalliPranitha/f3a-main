@@ -1,0 +1,55 @@
+/* Card3.module.scss */
+
+.card3-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+}
+
+.card3-content {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+
+  text-align: center;
+}
+
+.card3-heading {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 28px;
+}
+
+.card3-link {
+  display: block;
+  margin: 10px 0;
+  color: #007bff;
+  font-size: 18px;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #0056b3;
+  }
+}
+
+.back-button {
+  display: inline-block;
+  margin: 20px 0 10px 20px; /* Adjust as needed */
+  padding: 10px 20px;
+  border-radius: 4px;
+  background-color: #007bff; /* Add your desired background color */
+  color: #fff; /* Text color */
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #0056b3; /* Change color on hover */
+}
