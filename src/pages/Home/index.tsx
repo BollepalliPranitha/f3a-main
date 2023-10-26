@@ -21,9 +21,7 @@ export const Home = () => {
         <button onClick={() => setCount(x => x + 1)} style={{ margin: '0.25rem' }}>
           +
         </button>
-        <button onClick={() => setCount(x => x - 1)} style={{ margin: '0.25rem' }}>
-          -
-        </button>
+        <button onClick={() => setCount(x => x - 1)} style={{ margin: '0.25rem' }}></button>
       </h3>
       <br />
       <br />

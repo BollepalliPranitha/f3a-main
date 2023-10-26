@@ -14,46 +14,42 @@ interface AvailabilityData {
   availability: string;
 }
 
+axios.defaults.baseURL = 'http://localhost:3000';
+
 const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
   const [availability, setAvailability] = useState<AvailabilityData[]>([]);
+  const [newMemberName, setNewMemberName] = useState('');
+
+  // Fetch availability data when the component loads
+  const fetchAvailabilityData = async () => {
+    try {
+      const response = await axios.get<AvailabilityData[]>(`/api/availability/${teamName}`);
+      setAvailability(response.data);
+    } catch (error) {
+      console.error('Error fetching availability data:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchAvailabilityData = async () => {
-      try {
-        const response = await axios.get<AvailabilityData[]>(`http://localhost:3000/api/availability/${teamName}`);
-        setAvailability(response.data);
-      } catch (error) {
-        console.error('Error fetching availability data:', error);
-      }
-    };
-
     fetchAvailabilityData();
   }, [teamName]);
 
   const playerNames = Array.from(new Set(availability.map(data => data.playerName)));
   const matchDays = Array.from(new Set(availability.map(data => data.matchDay)));
 
-  type TableRow = {
-    playerName: string;
-    [key: string]: string | undefined;
-  };
+  const availabilityCounts: { [matchDay: string]: number } = {};
 
-  const tableData: TableRow[] = [];
-
-  playerNames.forEach(playerName => {
-    const rowData: TableRow = { playerName };
-
-    matchDays.forEach(matchDay => {
-      const availabilityData = availability.find(data => data.playerName === playerName && data.matchDay === matchDay);
-      rowData[matchDay] = availabilityData ? availabilityData.availability : undefined;
-    });
-
-    tableData.push(rowData);
+  availability.forEach(data => {
+    if (data.availability === 'Yes') {
+      availabilityCounts[data.matchDay] = (availabilityCounts[data.matchDay] || 0) + 1;
+    }
   });
 
   const updateAvailability = async (playerName: string, matchDay: string, newAvailability: string) => {
     try {
-      await axios.post('/update-availability', {
+      console.log('Updating availability for', playerName, matchDay, newAvailability); // Add this line for debugging
+
+      await axios.post('api/availability/update-availability', {
         playerName,
         matchDay,
         availability: newAvailability,
@@ -73,11 +69,15 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
 
   const saveAvailabilityToDB = async () => {
     try {
-      for (const rowData of tableData) {
+      for (const playerName of playerNames) {
         for (const matchDay of matchDays) {
-          const newAvailability = rowData[matchDay];
+          const newAvailability = (
+            availability.find(data => data.playerName === playerName && data.matchDay === matchDay) || {
+              availability: '',
+            }
+          ).availability;
           if (newAvailability !== undefined) {
-            await updateAvailability(rowData.playerName, matchDay, newAvailability);
+            await updateAvailability(playerName, matchDay, newAvailability);
           }
         }
       }
@@ -87,6 +87,76 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
     }
   };
 
+  const addMember = () => {
+    const memberName = prompt('Enter the name of the new member:');
+
+    if (memberName) {
+      setNewMemberName(memberName);
+    }
+  };
+
+  const saveNewMember = async () => {
+    try {
+      // Define a default team for new members
+      const defaultTeam = teamName; // Set the default team as the current teamName
+      // First, create the new player in the 'Player' table
+      const newPlayerResponse = await axios.post('/api/players', {
+        name: newMemberName,
+        team: defaultTeam,
+      });
+
+      if (newPlayerResponse.status !== 200) {
+        throw new Error('Failed to create a new player');
+      }
+      for (const matchDay of matchDays) {
+        // Then, add the new member to the 'AvailabilityData' table for each matchDay
+        const newMemberResponse = await axios.post('/api/availability/add-member', {
+          playerName: newMemberName,
+          matchDay, // Use the current matchDay from the loop
+          availability: 'Pending',
+          teamName: defaultTeam,
+        });
+        console.log('error ', newMemberName, matchDay, defaultTeam);
+        if (newMemberResponse.status !== 200) {
+          throw new Error('Failed to add a new member');
+        }
+      }
+
+      // Refresh the data after adding a new member
+      fetchAvailabilityData();
+    } catch (error) {
+      console.error('Error adding a new member:', error);
+    }
+  };
+  const deleteMember = async (playerName: string, matchDay: string) => {
+    try {
+      // Confirm the deletion with the user
+      const confirmDeletion = window.confirm(`Are you sure you want to delete ${playerName} on ${matchDay}?`);
+      if (!confirmDeletion) {
+        return;
+      }
+
+      // Delete data from both tables
+      await axios.delete('/api/availability/delete-member', {
+        data: {
+          playerName,
+          matchDay,
+          teamName,
+        },
+      });
+      await axios.delete('/api/players', {
+        data: {
+          playerName,
+          team: teamName,
+        },
+      });
+
+      // Refresh the data after deletion
+      fetchAvailabilityData();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+    }
+  };
   return (
     <div className={styles['team-members-container']}>
       <h2 className={styles['team-members-heading']}>{teamName} Members</h2>
@@ -95,22 +165,29 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
           <tr>
             <th>Player Name</th>
             {matchDays.map(matchDay => (
-              <th key={matchDay}>{matchDay}</th>
+              <th key={matchDay}>
+                {matchDay}
+                <div>Count: {availabilityCounts[matchDay] || 0}</div>
+              </th>
             ))}
-            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {tableData.map((rowData, index) => (
-            <tr key={rowData.playerName}>
-              <td>{rowData.playerName}</td>
+          {playerNames.map(playerName => (
+            <tr key={playerName}>
+              <td>{playerName}</td>
               {matchDays.map(matchDay => (
                 <td key={matchDay}>
                   <select
-                    id={`availability-${rowData.playerName}-${matchDay}`} // Unique id attribute
-                    name={`availability-${rowData.playerName}-${matchDay}`} // Unique name attribute
-                    value={rowData[matchDay] || ''}
-                    onChange={e => updateAvailability(rowData.playerName, matchDay, e.target.value)}
+                    name={`availability_${playerName}_${matchDay}`}
+                    value={
+                      (
+                        availability.find(data => data.playerName === playerName && data.matchDay === matchDay) || {
+                          availability: '',
+                        }
+                      ).availability
+                    }
+                    onChange={e => updateAvailability(playerName, matchDay, e.target.value)}
                   >
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
@@ -118,16 +195,39 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
                     <option value="Cannot Attend">Cannot Attend</option>
                     <option value="Pending">Pending</option>
                   </select>
+                  <button onClick={() => deleteMember(playerName, matchDay)} className={styles['delete-button']}>
+                    Delete
+                  </button>
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-      <button onClick={saveAvailabilityToDB}>Save</button>
+
+      {newMemberName !== '' && (
+        <div>
+          <input
+            type="text"
+            placeholder="New Member Name"
+            value={newMemberName}
+            onChange={e => setNewMemberName(e.target.value)}
+          />
+          <button onClick={saveNewMember} className={styles['save-button']}>
+            Save New Member
+          </button>
+        </div>
+      )}
+
       <Link to="/card" className={styles['back-button']}>
         Back
       </Link>
+      <button onClick={addMember} className={styles['save-button']}>
+        Add Member
+      </button>
+      <button onClick={saveAvailabilityToDB} className={styles['save-button']}>
+        Save
+      </button>
     </div>
   );
 };

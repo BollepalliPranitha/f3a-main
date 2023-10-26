@@ -4,6 +4,7 @@ declare const classNames: {
   readonly 'member-list': 'member-list';
   readonly 'back-button': 'back-button';
   readonly 'save-button': 'save-button';
+  readonly 'delete-button': 'delete-button';
   readonly 'button-container': 'button-container';
 };
 export = classNames;

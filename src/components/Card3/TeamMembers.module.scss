@@ -52,9 +52,29 @@ tr {
 
 .back-button {
   display: inline-block;
+  margin: 10px 0 10px 10px;
+  padding: 9px;
+  /* Add this line to set the border */
+  border-radius: 2px;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #090909; /* Change color on hover */
+}
+
+/* Styles for Save button */
+.save-button {
+  display: inline-block;
   margin: 20px 0 10px 20px; /* Adjust as needed */
   padding: 10px 20px;
-  border-radius: 4px;
+  border: none;
+  border-radius: 2px;
   background-color: #007bff; /* Add your desired background color */
   color: #fff; /* Text color */
   font-weight: bold;
@@ -63,16 +83,11 @@ tr {
   transition: background-color 0.3s ease;
 }
 
-.back-button:hover {
-  background-color: #0056b3; /* Change color on hover */
-}
-
-/* Styles for Save button */
-.save-button {
+.delete-button {
   display: inline-block;
-  margin: 20px 0 10px 20px; /* Adjust as needed */
-  padding: 10px 20px;
-  border-radius: 4px;
+  margin: 10px 0 10px 10px; /* Adjust as needed */
+  padding: 5px;
+  border-radius: 2px;
   background-color: #007bff; /* Add your desired background color */
   color: #fff; /* Text color */
   font-weight: bold;
