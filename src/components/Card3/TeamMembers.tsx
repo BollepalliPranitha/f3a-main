@@ -19,6 +19,7 @@ axios.defaults.baseURL = 'http://localhost:3000';
 const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
   const [availability, setAvailability] = useState<AvailabilityData[]>([]);
   const [newMemberName, setNewMemberName] = useState('');
+  const [playersToDelete, setPlayersToDelete] = useState<string[]>([]);
 
   // Fetch availability data when the component loads
   const fetchAvailabilityData = async () => {
@@ -66,7 +67,6 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
       console.error('Error updating availability:', error);
     }
   };
-
   const saveAvailabilityToDB = async () => {
     try {
       for (const playerName of playerNames) {
@@ -128,35 +128,55 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
       console.error('Error adding a new member:', error);
     }
   };
-  const deleteMember = async (playerName: string, matchDay: string) => {
+
+  const handleDeleteAllSelected = async () => {
     try {
       // Confirm the deletion with the user
-      const confirmDeletion = window.confirm(`Are you sure you want to delete ${playerName} on ${matchDay}?`);
+      const confirmDeletion = window.confirm(`Are you sure you want to delete selected players?`);
       if (!confirmDeletion) {
         return;
       }
 
-      // Delete data from both tables
-      await axios.delete('/api/availability/delete-member', {
-        data: {
-          playerName,
-          matchDay,
-          teamName,
-        },
-      });
-      await axios.delete('/api/players', {
-        data: {
-          playerName,
-          team: teamName,
-        },
-      });
+      for (const playerName of playersToDelete) {
+        // Delete data from both tables for all matchdays
+        for (const matchDay of matchDays) {
+          await axios.delete('/api/availability/delete-member', {
+            data: {
+              playerName,
+              matchDay,
+              teamName,
+            },
+          });
+        }
+
+        await axios.delete('/api/players', {
+          data: {
+            playerName,
+            team: teamName,
+          },
+        });
+      }
+
+      // Clear the players to delete list
+      setPlayersToDelete([]);
 
       // Refresh the data after deletion
       fetchAvailabilityData();
     } catch (error) {
-      console.error('Error deleting member:', error);
+      console.error('Error deleting selected players:', error);
     }
   };
+
+  const isPlayerSelectedToDelete = (playerName: string) => playersToDelete.includes(playerName);
+
+  const togglePlayerToDelete = (playerName: string) => {
+    if (playersToDelete.includes(playerName)) {
+      setPlayersToDelete(playersToDelete.filter(name => name !== playerName));
+    } else {
+      setPlayersToDelete([...playersToDelete, playerName]);
+    }
+  };
+
   return (
     <div className={styles['team-members-container']}>
       <h2 className={styles['team-members-heading']}>{teamName} Members</h2>
@@ -175,7 +195,14 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
         <tbody>
           {playerNames.map(playerName => (
             <tr key={playerName}>
-              <td>{playerName}</td>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={isPlayerSelectedToDelete(playerName)}
+                  onChange={() => togglePlayerToDelete(playerName)}
+                />
+                {playerName}
+              </td>
               {matchDays.map(matchDay => (
                 <td key={matchDay}>
                   <select
@@ -195,15 +222,17 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
                     <option value="Cannot Attend">Cannot Attend</option>
                     <option value="Pending">Pending</option>
                   </select>
-                  <button onClick={() => deleteMember(playerName, matchDay)} className={styles['delete-button']}>
-                    Delete
-                  </button>
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Render a single delete button and allow selecting players to delete */}
+      <button onClick={handleDeleteAllSelected} className={styles['delete-button']}>
+        Delete Selected
+      </button>
 
       {newMemberName !== '' && (
         <div>
