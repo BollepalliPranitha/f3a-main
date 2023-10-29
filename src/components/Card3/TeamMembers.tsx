@@ -20,6 +20,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
   const [availability, setAvailability] = useState<AvailabilityData[]>([]);
   const [newMemberName, setNewMemberName] = useState('');
   const [playersToDelete, setPlayersToDelete] = useState<string[]>([]);
+  const [isNewMemberAdded, setIsNewMemberAdded] = useState(false); // Add this state variable
 
   // Fetch availability data when the component loads
   const fetchAvailabilityData = async () => {
@@ -92,6 +93,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
 
     if (memberName) {
       setNewMemberName(memberName);
+      setIsNewMemberAdded(true);
     }
   };
 
@@ -124,6 +126,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
 
       // Refresh the data after adding a new member
       fetchAvailabilityData();
+      setIsNewMemberAdded(false);
     } catch (error) {
       console.error('Error adding a new member:', error);
     }
@@ -228,35 +231,45 @@ const TeamMembers: React.FC<TeamMembersProps> = ({ teamName }) => {
           ))}
         </tbody>
       </table>
+      <div className={styles['button-container']}>
+        {/* Render a single delete button and allow selecting players to delete */}
+        <button onClick={handleDeleteAllSelected} className={styles['delete-button']}>
+          Delete Selected
+        </button>
 
-      {/* Render a single delete button and allow selecting players to delete */}
-      <button onClick={handleDeleteAllSelected} className={styles['delete-button']}>
-        Delete Selected
-      </button>
+        {
+          /* Render the input and button only if a new member has not been added */
+          !isNewMemberAdded && (
+            <div>
+              <button onClick={addMember} className={styles['save-button']}>
+                Add Member
+              </button>
+            </div>
+          )
+        }
 
-      {newMemberName !== '' && (
-        <div>
-          <input
-            type="text"
-            placeholder="New Member Name"
-            value={newMemberName}
-            onChange={e => setNewMemberName(e.target.value)}
-          />
-          <button onClick={saveNewMember} className={styles['save-button']}>
-            Save New Member
-          </button>
-        </div>
-      )}
+        {isNewMemberAdded && (
+          <div>
+            <input
+              type="text"
+              placeholder="New Member Name"
+              value={newMemberName}
+              onChange={e => setNewMemberName(e.target.value)}
+            />
+            <button onClick={saveNewMember} className={styles['save-button']}>
+              Save New Member
+            </button>
+          </div>
+        )}
 
-      <Link to="/card" className={styles['back-button']}>
-        Back
-      </Link>
-      <button onClick={addMember} className={styles['save-button']}>
-        Add Member
-      </button>
-      <button onClick={saveAvailabilityToDB} className={styles['save-button']}>
-        Save
-      </button>
+        <button onClick={saveAvailabilityToDB} className={styles['save-button']}>
+          Save
+        </button>
+
+        <Link to="/card" className={styles['back-button']}>
+          Back
+        </Link>
+      </div>
     </div>
   );
 };
